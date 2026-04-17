@@ -22,10 +22,10 @@ set -euo pipefail
 : "${ASC_TEAM_ID:?set ASC_TEAM_ID (10-char Apple Developer Team ID)}"
 ASC_KEY_PATH="${ASC_KEY_PATH:-$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8}"
 
-BUNDLE_ID="com.sleepwindow.app"
-APP_NAME="SleepWindow"
+BUNDLE_ID="com.walkcue.app"
+APP_NAME="WalkCue"
 PRIMARY_LOCALE="en-US"
-SKU="SLEEPWINDOW001"
+SKU="WALKCUE001"
 
 if [[ ! -f "$ASC_KEY_PATH" ]]; then
   echo "private key not found at $ASC_KEY_PATH" >&2

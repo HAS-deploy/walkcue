@@ -12,7 +12,7 @@ enum PricingConfig {
         "Unlimited custom routines",
         "Full walk history",
         "Advanced cue packs",
-        "Multiple bedtime & walk reminders",
+        "Unlimited walk reminders",
         "Saved presets and favorites"
     ]
 

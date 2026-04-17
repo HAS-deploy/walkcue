@@ -16,14 +16,14 @@ Requires:
 import os, sys, json, time, urllib.request, urllib.parse, mimetypes, io, pathlib
 import jwt
 
-APP_ID = os.environ.get("APP_ID", "6762465676")
+APP_ID = os.environ.get("APP_ID", "6762468976")
 KEY_ID = os.environ["ASC_KEY_ID"]
 ISSUER = os.environ["ASC_ISSUER_ID"]
 KEY_PATH = os.environ.get("ASC_KEY_PATH", f"{os.path.expanduser('~')}/.appstoreconnect/private_keys/AuthKey_{KEY_ID}.p8")
 BASE = "https://api.appstoreconnect.apple.com"
 
-BUNDLE_ID = "com.sleepwindow.app"
-LIFETIME_PRODUCT_ID = "com.sleepwindow.app.lifetime"
+BUNDLE_ID = os.environ.get("BUNDLE_ID", "com.walkcue.app")
+LIFETIME_PRODUCT_ID = os.environ.get("PRODUCT_ID", "com.walkcue.app.lifetime")
 
 
 def token():
@@ -70,8 +70,8 @@ def ensure_iap_localization(iap_id):
                 "type": "inAppPurchaseLocalizations",
                 "attributes": {
                     "locale": "en-US",
-                    "name": "SleepWindow Lifetime Unlock",
-                    "description": "One-time unlock. All calculators & reminders.",
+                    "name": "WalkCue Lifetime Unlock",
+                    "description": "One-time unlock. All routines & reminders.",
                 },
                 "relationships": {
                     "inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}},
@@ -123,7 +123,7 @@ def cmd_iap_screenshot(path="docs/screenshots/paywall.png"):
     upload_iap_review_screenshot(iap_id, path)
 
 
-def ensure_iap_price(iap_id, customer_price="7.99", territory="USA"):
+def ensure_iap_price(iap_id, customer_price="8.99", territory="USA"):
     # Price point lookup uses v2 path for v2-created IAPs; schema here is fiddly
     # across Apple API versions so we fetch via the v2 per-product price points.
     try:
@@ -194,7 +194,7 @@ def cmd_iap():
                 "name": "Lifetime Unlock",
                 "productId": LIFETIME_PRODUCT_ID,
                 "inAppPurchaseType": "NON_CONSUMABLE",
-                "reviewNote": "Unlocks all calculators, nap planner, caffeine cutoff, unlimited reminders and presets. One-time purchase, no subscription.",
+                "reviewNote": "Unlocks unlimited custom routines, full walk history, advanced cue packs, and unlimited reminders. One-time purchase, no subscription.",
                 "familySharable": False,
             },
             "relationships": {
@@ -294,30 +294,31 @@ def cmd_metadata():
 
     attrs = {
         "description": (
-            "SleepWindow helps you plan sleep timing around 90-minute sleep cycles.\n\n"
-            "Pick a wake time and see when to go to bed — or tap \"sleep now\" to see when to set your alarm. "
-            "Plan naps that end at the right stage. See a conservative caffeine cutoff for your target bedtime.\n\n"
+            "WalkCue is the walking timer for people who just want to walk — without the fuss.\n\n"
+            "Tap start, get a guided walk with simple interval cues, and build a consistent daily habit. "
+            "Pick a routine, set a goal, and go.\n\n"
             "Features\n"
-            "• Bedtime calculator — pick your wake time, get ideal bedtime options\n"
-            "• Wake-time calculator — tap \"if I fall asleep now,\" get wake options\n"
-            "• Nap planner — power nap, short nap, full-cycle nap\n"
-            "• Caffeine cutoff — plan when to stop caffeine based on bedtime\n"
-            "• Bedtime reminders — simple, reliable local reminders\n"
-            "• Saved presets — quick access for workdays and weekends\n"
-            "• 12-hour or 24-hour time, light or dark mode\n\n"
+            "• Quick Start — one tap, guided walk with warm up, brisk, and cool down\n"
+            "• Interval cues — haptic and audio cues at each transition\n"
+            "• Preset routines — beginner, brisk intervals, treadmill, recovery\n"
+            "• Daily goal tracking — minutes walked, sessions completed\n"
+            "• Walk history — see your consistency over time\n"
+            "• Walk reminders — simple, reliable local notifications\n"
+            "• Optional Apple Health step count\n"
+            "• Works offline, large readable UI, one-handed use\n\n"
             "Privacy-first\n"
             "• No account, no sign-in\n"
             "• No cloud sync, no analytics SDKs\n"
-            "• Works fully offline\n\n"
+            "• Health integration is fully optional\n\n"
             "One-time purchase\n"
-            "• Free: bedtime calculator, limited wake-time calculations, one reminder\n"
-            "• Lifetime unlock: everything, forever — no subscriptions, no recurring charges\n\n"
-            "Results are estimates for planning sleep timing. SleepWindow is not a medical device and does not diagnose, treat, or monitor any condition."
+            "• Free: quick start, built-in routines, one custom routine, 7-day history\n"
+            "• Lifetime unlock: unlimited custom routines, full history, advanced cues — forever, no subscription\n\n"
+            "WalkCue supports daily walking routines. It is not a medical device and does not diagnose, treat, or monitor any condition."
         ),
-        "keywords": "sleep,bedtime,nap,wake,alarm,sleep cycle,caffeine,reminder,bedtime planner,sleep schedule",
-        "marketingUrl": "https://has-deploy.github.io/sleepwindow/",
-        "promotionalText": "Plan bedtime, wake time, and naps around 90-minute sleep cycles. One-time purchase unlocks everything — no subscriptions.",
-        "supportUrl": "https://has-deploy.github.io/sleepwindow/support.html",
+        "keywords": "walk,walking,treadmill,interval,timer,pedometer,steps,cardio,reminder,walking coach",
+        "marketingUrl": "https://has-deploy.github.io/walkcue/",
+        "promotionalText": "Walk more, without the fuss. Interval cues, routines, and a simple daily goal. One-time purchase, no subscription.",
+        "supportUrl": "https://has-deploy.github.io/walkcue/support.html",
     }
 
     if en:
@@ -337,7 +338,7 @@ def cmd_metadata():
     print("Metadata saved.")
 
 
-def cmd_privacy(url="https://has-deploy.github.io/sleepwindow/privacy.html"):
+def cmd_privacy(url="https://has-deploy.github.io/walkcue/privacy-policy.html"):
     """Set the privacy policy URL on app info localization."""
     infos = request("GET", f"/v1/apps/{APP_ID}/appInfos", params={"limit": 10})
     # Use the editable one (state EDITABLE / PREPARE_FOR_SUBMISSION etc.)
@@ -357,7 +358,7 @@ def cmd_privacy(url="https://has-deploy.github.io/sleepwindow/privacy.html"):
         request("POST", "/v1/appInfoLocalizations", {
             "data": {
                 "type": "appInfoLocalizations",
-                "attributes": {"locale": "en-US", "privacyPolicyUrl": url, "name": "SleepWindow"},
+                "attributes": {"locale": "en-US", "privacyPolicyUrl": url, "name": "WalkCue"},
                 "relationships": {"appInfo": {"data": {"type": "appInfos", "id": info_id}}},
             }
         })
