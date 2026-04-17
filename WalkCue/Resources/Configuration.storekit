@@ -1,0 +1,30 @@
+{
+  "identifier" : "WalkCueStoreKit",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "8.99",
+      "familyShareable" : false,
+      "internalID" : "walkcue.lifetime",
+      "localizations" : [
+        {
+          "description" : "One-time purchase. Unlock custom routines, full history, advanced cues, and unlimited reminders.",
+          "displayName" : "WalkCue Lifetime Unlock",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.walkcue.app.lifetime",
+      "referenceName" : "Lifetime Unlock",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "WalkCue",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA"
+  },
+  "subscriptionGroups" : [],
+  "version" : { "major" : 3, "minor" : 0 }
+}
