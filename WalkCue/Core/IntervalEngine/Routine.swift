@@ -93,11 +93,10 @@ enum BuiltInRoutines {
         id: UUID(uuidString: "00000000-0000-0000-0000-00000000A003")!,
         name: "Brisk Intervals 30 Minutes",
         intervals: [
-            Interval(kind: .warmup, duration: 5 * 60),
-            Interval(kind: .brisk, duration: 60),
-            Interval(kind: .easy, duration: 2 * 60),
+            Interval(kind: .brisk, duration: 2 * 60),
+            Interval(kind: .easy, duration: 4 * 60),
         ],
-        repeats: 6,
+        repeats: 5,
         isBuiltIn: true
     )
 

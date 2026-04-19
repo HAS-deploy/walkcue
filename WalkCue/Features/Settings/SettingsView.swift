@@ -11,7 +11,6 @@ struct SettingsView: View {
     @State private var walkReminderEnabled = false
     @State private var walkReminderTime: Date = TimeFormat.combine(hour: 8, minute: 0)
     @State private var reminderAuthStatus: ReminderManager.AuthStatus = .notDetermined
-    private let healthKit = HealthKitManager()
 
     var body: some View {
         Form {
@@ -79,7 +78,9 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
         } header: { Text("Reminders") } footer: {
-            Text("Free tier: \(PricingConfig.freeReminderSlots) reminder. Unlock for unlimited.")
+            if !purchases.isPremium {
+                Text("Free tier: \(PricingConfig.freeReminderSlots) reminder. Unlock for unlimited.")
+            }
         }
     }
 
@@ -101,19 +102,11 @@ struct SettingsView: View {
         }
     }
 
+    // Apple Health integration removed in v1.0 — will re-add with full entitlement
+    // setup in a later version. Keeping this stub empty so the `healthSection`
+    // call site compiles.
     @ViewBuilder
-    private var healthSection: some View {
-        if healthKit.isAvailable {
-            Section {
-                Toggle("Use Apple Health step count", isOn: $settings.healthKitOptedIn)
-                    .onChange(of: settings.healthKitOptedIn) { enabled in
-                        if enabled { Task { _ = await healthKit.requestStepsAuthorization() } }
-                    }
-            } header: { Text("Apple Health") } footer: {
-                Text("Optional. WalkCue works without Health access.")
-            }
-        }
-    }
+    private var healthSection: some View { EmptyView() }
 
     private var displaySection: some View {
         Section {
