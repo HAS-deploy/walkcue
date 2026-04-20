@@ -1,82 +1,48 @@
-# WalkCue — FINAL pre-review audit
+# WalkCue — Adversarial App Store Review Audit (FINAL)
 
-Run date: 2026-04-17
-Prompt source: `~/Documents/app-store-review-prompt.md`
-State: v1.0 submitted to Apple, WAITING_FOR_REVIEW. Comprehensive reviewer
-notes + 20-sec demo video attached after the SleepWindow 2.1 rejection.
+**Run date:** 2026-04-17
+**Reviewer persona:** Apple App Store Review
+**Target:** `/Users/tony/Developer/walkcue` @ current HEAD
+**ASC app ID:** 6762468976
+**State:** WAITING_FOR_REVIEW; reviewer notes + demo video attached.
+**Verdict:** **2 HARD, 4 SIGNIFICANT.** Do NOT let the current submission review without fixes.
 
-## Summary
+## HARD
 
-**No HARD rejections.** **No SIGNIFICANT rejections remain in the codebase.**
-All Apple 2.1 "Information Needed" blockers are pre-answered in the review
-details notes + demo video.
+### H1 — 2.5.1 / 5.1.1 — HealthKit used without entitlement
+- `HealthKitManager.swift:3,12,28` calls `HKHealthStore()` + `requestAuthorization`.
+- No `*.entitlements` anywhere; `project.yml` has no `CODE_SIGN_ENTITLEMENTS`; `project.pbxproj` has none.
+- **Impact:** in production the authorization sheet never appears; reviewer hits dead feature → 2.1 bounce.
+- **Fix (simplest for v1):** strip HealthKit from v1. Remove the import, the manager, the Settings toggle, and `NSHealthShareUsageDescription`/`NSHealthUpdateUsageDescription` from `project.yml`. Advertise "Apple Health support coming soon" in description if desired, or just omit entirely.
 
-## HARD rejections
+### H2 — 2.5.4 — `UIBackgroundModes=audio` declared but never produces background audio
+- `Info.plist:31-34` + `project.yml:44-45` declare `audio`.
+- `CueEmitter.swift:54,69` uses `AudioServicesPlaySystemSound` — does NOT play in background.
+- No `AVAudioSession` setup anywhere.
+- **Fix (simplest):** remove `UIBackgroundModes` entirely — cues only fire with app on-screen, which is honest.
 
-None. WalkCue is:
-- Fully local-first (no network except StoreKit).
-- No account / sign-in.
-- One clean non-consumable IAP.
-- No third-party redistributable binaries.
-- No JS runtime / downloadable code execution.
-- `ITSAppUsesNonExemptEncryption = false`.
+## SIGNIFICANT
 
-## SIGNIFICANT risks — all cleared
+### S1 — 5.1.1 / 2.3.1 — `NSHealthUpdateUsageDescription` promises workout saves that never happen
+Cleared by H1 fix.
 
-| # | Finding | Status |
-|---|---|---|
-| 1 | 2.1 Info-needed rejection risk | ✅ 8-point reviewer notes + demo video preemptively supplied |
-| 2 | 2.3.3 Screenshots showing actual app | ✅ 4 iPhone 6.9" + 4 iPad 12.9" screenshots show premium content in use |
-| 3 | 5.1.1 Purpose strings | ✅ `NSHealthShareUsageDescription` + `NSHealthUpdateUsageDescription` both include the word "optional" and say what they're for |
-| 4 | Privacy policy URL | ✅ https://has-deploy.github.io/walkcue/privacy-policy.html live |
-| 5 | App Privacy nutrition label | ✅ published as Data Not Collected |
+### S2 — 2.3.1 / 3.1.1 — Paywall lists non-existent features
+- `PricingConfig.swift:13` "Advanced cue packs" — no cue pack feature in code.
+- `PricingConfig.swift:16` "Saved presets and favorites" — no preset/favorite feature in code.
+- **Fix:** remove both lines. Delete orphan `PremiumFeature.advancedCues` + its test.
 
-## MODERATE risks
+### S3 — 3.1.1 — Paywall missing EULA + Privacy Policy links
+- `PaywallView.swift:106-113` legal footer has neither.
+- **Fix:** add `Link("Terms of Use (EULA)", ...)` to Apple standard EULA URL + `Link("Privacy Policy", ...)` to the Pages URL.
 
-### 1 — 4.2 Minimum Functionality
-Core is four time-based features: walk session, routine, history, cues.
-Full StoreKit 2 integration, local notifications, and persisted state put
-this well above "repackaged website" territory. Reviewer notes call out
-the native integrations explicitly.
+### S4 — 2.1 — Double history-insert race on session end
+- `WalkSessionView.swift:25` `onChange(.finished) → finalize()` + button paths both call `history.add`.
+- **Fix:** remove the `.onChange` `finalize()` path; buttons are the single write.
 
-### 2 — 1.4.1 Health-adjacent content
-Three "not medical advice" disclaimers. Walking is a low-risk category.
-Reviewer notes explicitly state WalkCue does not diagnose/treat anything.
-**Pass.**
-
-### 3 — Background audio mode
-Info.plist declares `UIBackgroundModes = audio` so interval cues continue
-playing during an active walk when the device is locked. The entitlement
-is used ONLY during an active `WalkSession`, never otherwise. Apple
-routinely approves this for workout/timer apps.
-
-## SOFT risks
-
-### 4 — Accessibility
-Result rows and controls use large touch targets and SwiftUI's built-in
-accessibility. No VoiceOver breaks. Premium-lock upsell card is a
-well-labeled Button.
-
-### 5 — Privacy manifest alignment
-`NSPrivacyAccessedAPICategoryUserDefaults CA92.1` declared. Code uses
-UserDefaults exclusively for persistence. HealthKit usage is behind an
-explicit user toggle. **Pass.**
-
-### 6 — Version/build
-`1.0` / `1`. First submission; clean.
-
-## Test coverage
-- **20 unit tests** passing:
-  - `IntervalEngineTests`: progress math, transitions, midnight rollover, repeats, negative clamp
-  - `PremiumGateTests`: feature gating
-  - `RoutinesStoreTests`: add, update, delete, persistence, built-ins
-  - `HistoryStoreTests`: add, filter by day, 500-cap
-
-## Manual QA on simulator
-- iPhone 17 Pro Max: all 4 tabs render, paywall opens/closes cleanly
-- iPhone SE 3rd gen: layout intact, no clipping
-- iPad Pro 13": layout works in both orientations
-
-## Remaining action items
-None. WalkCue is ready for review. If rejected under 2.1, the demo video
-+ notes should be sufficient. If re-reviewed and approved, ship.
+## Prioritized fix list
+1. **H1** — strip HealthKit from v1 (fastest path; keeps scope safe).
+2. **H2** — remove `UIBackgroundModes=audio`.
+3. **S2** — remove 2 imaginary paywall benefits.
+4. **S3** — add EULA + Privacy links to paywall footer.
+5. **S4** — fix double history-insert.
+6. Regenerate project, re-archive, re-upload, cancel current submission, submit new build.

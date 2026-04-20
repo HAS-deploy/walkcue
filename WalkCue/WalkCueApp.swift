@@ -10,6 +10,10 @@ struct WalkCueApp: App {
     private let reminders = ReminderManager()
     private let cues = CueEmitter()
 
+    init() {
+        PortfolioAnalytics.shared.start(appName: "walkcue")
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

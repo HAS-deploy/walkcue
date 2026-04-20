@@ -14,12 +14,11 @@ final class PremiumGateTests: XCTestCase {
         XCTAssertFalse(gate.isAllowed(.customRoutines))
         XCTAssertFalse(gate.isAllowed(.fullHistory))
         XCTAssertFalse(gate.isAllowed(.multipleReminders))
-        XCTAssertFalse(gate.isAllowed(.advancedCues))
     }
 
     func testPremiumAllowsEverything() {
         let gate = PremiumGate(isPremium: true)
-        for f in [PremiumFeature.quickStart, .builtInRoutines, .customRoutines, .fullHistory, .multipleReminders, .advancedCues] {
+        for f in [PremiumFeature.quickStart, .builtInRoutines, .customRoutines, .fullHistory, .multipleReminders] {
             XCTAssertTrue(gate.isAllowed(f))
         }
     }

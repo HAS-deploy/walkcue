@@ -20,9 +20,8 @@ struct WalkSessionView: View {
         .onAppear {
             if session.state == .idle { session.start() }
         }
-        .onChange(of: session.state) { newValue in
-            if newValue == .finished { finalize() }
-        }
+        // Do NOT insert into history on state change — the End buttons are
+        // the single source of truth for adding the summary.
     }
 
     private var topBar: some View {

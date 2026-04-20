@@ -11,9 +11,7 @@ enum PricingConfig {
     static let paywallBenefits: [String] = [
         "Unlimited custom routines",
         "Full walk history",
-        "Advanced cue packs",
-        "Unlimited walk reminders",
-        "Saved presets and favorites"
+        "Unlimited walk reminders"
     ]
 
     /// Free-tier caps.

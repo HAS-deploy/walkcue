@@ -6,7 +6,6 @@ enum PremiumFeature: String, Identifiable, Hashable {
     case customRoutines
     case fullHistory
     case multipleReminders
-    case advancedCues
 
     var id: String { rawValue }
 
@@ -17,7 +16,6 @@ enum PremiumFeature: String, Identifiable, Hashable {
         case .customRoutines: return "Custom Routines"
         case .fullHistory: return "Full History"
         case .multipleReminders: return "Multiple Reminders"
-        case .advancedCues: return "Advanced Cues"
         }
     }
 }
@@ -30,7 +28,7 @@ struct PremiumGate {
         switch feature {
         case .quickStart, .builtInRoutines:
             return true
-        case .customRoutines, .fullHistory, .multipleReminders, .advancedCues:
+        case .customRoutines, .fullHistory, .multipleReminders:
             return false
         }
     }
