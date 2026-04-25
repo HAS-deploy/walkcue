@@ -5,6 +5,7 @@ import StoreKit
 final class PurchaseManager: ObservableObject {
     @Published private(set) var isPremium: Bool = false
     @Published private(set) var lifetimeProduct: Product?
+    @Published private(set) var monthlyProduct: Product?
     @Published private(set) var isPurchasing: Bool = false
     @Published var lastError: String?
 
@@ -34,10 +35,15 @@ final class PurchaseManager: ObservableObject {
         lifetimeProduct?.displayPrice ?? PricingConfig.fallbackLifetimeDisplayPrice
     }
 
+    var monthlyDisplayPrice: String {
+        monthlyProduct?.displayPrice ?? PricingConfig.fallbackMonthlyDisplayPrice
+    }
+
     func loadProducts() async {
         do {
-            let products = try await Product.products(for: [PricingConfig.lifetimeProductID])
-            self.lifetimeProduct = products.first
+            let products = try await Product.products(for: PricingConfig.allProductIDs)
+            self.lifetimeProduct = products.first { $0.id == PricingConfig.lifetimeProductID }
+            self.monthlyProduct  = products.first { $0.id == PricingConfig.monthlyProductID }
         } catch {
             self.lastError = "Couldn't load the store. Check your connection and try again."
         }
@@ -48,6 +54,18 @@ final class PurchaseManager: ObservableObject {
             self.lastError = "Product unavailable. Try again in a moment."
             return
         }
+        await purchase(product)
+    }
+
+    func purchaseMonthly() async {
+        guard let product = monthlyProduct else {
+            self.lastError = "Product unavailable. Try again in a moment."
+            return
+        }
+        await purchase(product)
+    }
+
+    private func purchase(_ product: Product) async {
         isPurchasing = true
         defer { isPurchasing = false }
         do {
@@ -64,12 +82,9 @@ final class PurchaseManager: ObservableObject {
             let transaction = try checkVerified(verification)
             setPremium(true)
             await transaction.finish()
-        case .userCancelled:
-            break
-        case .pending:
-            self.lastError = "Purchase is pending approval."
-        @unknown default:
-            break
+        case .userCancelled: break
+        case .pending: self.lastError = "Purchase is pending approval."
+        @unknown default: break
         }
     }
 
@@ -77,9 +92,7 @@ final class PurchaseManager: ObservableObject {
         do {
             try await AppStore.sync()
             await refreshEntitlements()
-            if !isPremium {
-                self.lastError = "No previous purchases found on this Apple ID."
-            }
+            if !isPremium { self.lastError = "No previous purchases found on this Apple ID." }
         } catch {
             self.lastError = error.localizedDescription
         }
@@ -89,14 +102,13 @@ final class PurchaseManager: ObservableObject {
         #if DEBUG
         if ProcessInfo.processInfo.environment["WALKCUE_FORCE_PREMIUM"] == "1"
             || UserDefaults.standard.bool(forKey: "WALKCUE_FORCE_PREMIUM") {
-            setPremium(true)
-            return
+            setPremium(true); return
         }
         #endif
         var entitled = false
         for await result in Transaction.currentEntitlements {
             if case .verified(let transaction) = result,
-               transaction.productID == PricingConfig.lifetimeProductID,
+               PricingConfig.allProductIDs.contains(transaction.productID),
                transaction.revocationDate == nil {
                 entitled = true
             }
@@ -117,11 +129,11 @@ final class PurchaseManager: ObservableObject {
     }
 
     private func handleVerifiedUpdate(_ transaction: Transaction) async {
-        if transaction.productID == PricingConfig.lifetimeProductID,
+        if PricingConfig.allProductIDs.contains(transaction.productID),
            transaction.revocationDate == nil {
             setPremium(true)
         } else if transaction.revocationDate != nil {
-            setPremium(false)
+            await refreshEntitlements()
         }
         await transaction.finish()
     }

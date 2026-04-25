@@ -8,7 +8,7 @@
       "internalID" : "walkcue.lifetime",
       "localizations" : [
         {
-          "description" : "One-time purchase. Unlock custom routines, full history, advanced cues, and unlimited reminders.",
+          "description" : "One-time purchase. Unlimited custom routines, full walk history, and unlimited walk reminders.",
           "displayName" : "WalkCue Lifetime Unlock",
           "locale" : "en_US"
         }
@@ -18,13 +18,36 @@
       "type" : "NonConsumable"
     }
   ],
-  "settings" : {
-    "_applicationInternalID" : "WalkCue",
-    "_developerTeamID" : "",
-    "_failTransactionsEnabled" : false,
-    "_locale" : "en_US",
-    "_storefront" : "USA"
-  },
-  "subscriptionGroups" : [],
+  "settings" : { "_applicationInternalID" : "WalkCue", "_failTransactionsEnabled" : false, "_locale" : "en_US", "_storefront" : "USA" },
+  "subscriptionGroups" : [
+    {
+      "id" : "walkcue_premium",
+      "localizations" : [],
+      "name" : "WalkCue Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "walkcue.monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Auto-renewing monthly subscription. Unlimited custom routines, full walk history, and unlimited walk reminders.",
+              "displayName" : "WalkCue Premium (Monthly)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.walkcue.app.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "WalkCue Premium Monthly",
+          "subscriptionGroupID" : "walkcue_premium",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
   "version" : { "major" : 3, "minor" : 0 }
 }

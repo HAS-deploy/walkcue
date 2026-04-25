@@ -25,24 +25,28 @@ struct RootView: View {
         TabView(selection: $selection) {
             NavigationStack {
                 StartView(onGatedTap: { paywallTrigger = $0 })
+                    .trackScreen("start")
             }
             .tabItem { Label("Start", systemImage: "figure.walk") }
             .tag(Tab.start)
 
             NavigationStack {
                 RoutinesView(onGatedTap: { paywallTrigger = $0 })
+                    .trackScreen("routines")
             }
             .tabItem { Label("Routines", systemImage: "list.bullet.rectangle") }
             .tag(Tab.routines)
 
             NavigationStack {
                 HistoryView(onGatedTap: { paywallTrigger = $0 })
+                    .trackScreen("history")
             }
             .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
             .tag(Tab.history)
 
             NavigationStack {
                 SettingsView()
+                    .trackScreen("settings")
             }
             .tabItem { Label("Settings", systemImage: "gearshape") }
             .tag(Tab.settings)

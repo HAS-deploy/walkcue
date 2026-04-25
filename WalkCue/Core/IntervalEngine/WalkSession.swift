@@ -38,6 +38,9 @@ final class WalkSession: ObservableObject, Identifiable {
         refresh()
         cues.emitIntervalStart(engine.currentInterval(at: 0))
         startTimer()
+        PortfolioAnalytics.shared.track("routine.started", [
+            "routine_id": engine.routine.id.uuidString,
+        ])
     }
 
     func pause() {
@@ -102,6 +105,10 @@ final class WalkSession: ObservableObject, Identifiable {
                 cues.emitSessionComplete()
                 state = .finished
                 stopTimer()
+                PortfolioAnalytics.shared.track("routine.completed", [
+                    "routine_id": engine.routine.id.uuidString,
+                    "duration_sec": Int(currentElapsed().rounded()),
+                ])
             }
         }
     }

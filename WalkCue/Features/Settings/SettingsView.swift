@@ -21,6 +21,7 @@ struct SettingsView: View {
             healthSection
             displaySection
             aboutSection
+            moreFromUsSection
             #if DEBUG
             debugSection
             #endif
@@ -127,6 +128,31 @@ struct SettingsView: View {
             LabeledContent("Walks recorded", value: "\(history.walks.count)")
         } header: { Text("About") } footer: {
             Text("WalkCue is a walking timer and cue app. Not medical advice.")
+        }
+    }
+
+    private var moreFromUsSection: some View {
+        Section {
+            Link(destination: URL(string: "https://apps.apple.com/app/id6762470335")!) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("HydroLite").font(.body).foregroundStyle(.primary)
+                    Text("Simple, friendly hydration tracking.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Link(destination: URL(string: "https://apps.apple.com/app/id6762492636")!) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("RackTimer").font(.body).foregroundStyle(.primary)
+                    Text("Smart rest timer for the gym.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Link(destination: URL(string: "https://apps.apple.com/app/id6762465676")!) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SleepWindow").font(.body).foregroundStyle(.primary)
+                    Text("Personalized bed/wake windows.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        } header: { Text("More from us") } footer: {
+            Text("Other useful apps from the same team. Tap to open in the App Store.")
         }
     }
 
