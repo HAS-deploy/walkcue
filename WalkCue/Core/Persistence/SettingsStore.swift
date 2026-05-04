@@ -11,6 +11,7 @@ final class SettingsStore: ObservableObject {
         static let dailyMinutesGoal = "settings.dailyMinutesGoal"
         static let appearance = "settings.appearance"
         static let healthKitOptedIn = "settings.healthKitOptedIn"
+        static let backgroundCompletionAlertEnabled = "settings.backgroundCompletionAlertEnabled"
     }
 
     enum Units: String, CaseIterable, Identifiable {
@@ -34,6 +35,9 @@ final class SettingsStore: ObservableObject {
     @Published var dailyMinutesGoal: Int { didSet { defaults.set(dailyMinutesGoal, forKey: Keys.dailyMinutesGoal) } }
     @Published var appearance: Appearance { didSet { defaults.set(appearance.rawValue, forKey: Keys.appearance) } }
     @Published var healthKitOptedIn: Bool { didSet { defaults.set(healthKitOptedIn, forKey: Keys.healthKitOptedIn) } }
+    @Published var backgroundCompletionAlertEnabled: Bool {
+        didSet { defaults.set(backgroundCompletionAlertEnabled, forKey: Keys.backgroundCompletionAlertEnabled) }
+    }
 
     private let defaults: UserDefaults
 
@@ -46,6 +50,7 @@ final class SettingsStore: ObservableObject {
         self.dailyMinutesGoal = (defaults.object(forKey: Keys.dailyMinutesGoal) as? Int) ?? 30
         self.appearance = Appearance(rawValue: defaults.string(forKey: Keys.appearance) ?? "system") ?? .system
         self.healthKitOptedIn = defaults.bool(forKey: Keys.healthKitOptedIn)
+        self.backgroundCompletionAlertEnabled = (defaults.object(forKey: Keys.backgroundCompletionAlertEnabled) as? Bool) ?? true
     }
 
     var forcedColorScheme: ColorScheme? {

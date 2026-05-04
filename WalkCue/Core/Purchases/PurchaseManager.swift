@@ -8,6 +8,8 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var monthlyProduct: Product?
     @Published private(set) var isPurchasing: Bool = false
     @Published var lastError: String?
+    /// Distinguish user-cancel / pending / errors for the analytics layer.
+    @Published private(set) var lastFailureReason: String?
 
     private var updatesTask: Task<Void, Never>?
     private let premiumKey = "walkcue.isPremium"
@@ -68,23 +70,33 @@ final class PurchaseManager: ObservableObject {
     private func purchase(_ product: Product) async {
         isPurchasing = true
         defer { isPurchasing = false }
+        lastFailureReason = nil
         do {
             let result = try await product.purchase()
-            try await handle(result: result)
+            try await handle(result: result, product: product)
         } catch {
             self.lastError = error.localizedDescription
+            self.lastFailureReason = error.localizedDescription
+            PortfolioAnalytics.shared.trackPaywallFailure(productId: product.id, error: error)
         }
     }
 
-    private func handle(result: Product.PurchaseResult) async throws {
+    private func handle(result: Product.PurchaseResult, product: Product) async throws {
         switch result {
         case .success(let verification):
             let transaction = try checkVerified(verification)
             setPremium(true)
             await transaction.finish()
-        case .userCancelled: break
-        case .pending: self.lastError = "Purchase is pending approval."
-        @unknown default: break
+        case .userCancelled:
+            lastFailureReason = "user_cancelled"
+            PortfolioAnalytics.shared.trackPaywallFailure(productId: product.id, reason: .userCanceled)
+        case .pending:
+            self.lastError = "Purchase is pending approval."
+            lastFailureReason = "pending_approval"
+            PortfolioAnalytics.shared.trackPaywallFailure(productId: product.id, reason: .pending)
+        @unknown default:
+            lastFailureReason = "storekit_unknown_case"
+            PortfolioAnalytics.shared.trackPaywallFailure(productId: product.id, reason: .unknown)
         }
     }
 
@@ -95,6 +107,7 @@ final class PurchaseManager: ObservableObject {
             if !isPremium { self.lastError = "No previous purchases found on this Apple ID." }
         } catch {
             self.lastError = error.localizedDescription
+            self.lastFailureReason = error.localizedDescription
         }
     }
 

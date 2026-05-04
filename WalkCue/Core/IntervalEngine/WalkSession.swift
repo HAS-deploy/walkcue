@@ -23,11 +23,20 @@ final class WalkSession: ObservableObject, Identifiable {
     private var lastTickElapsed: TimeInterval = 0
     private var timerCancellable: AnyCancellable?
     private let cues: CueEmitter
+    private let notifier: BackgroundCompletionNotifier
+    private let notificationIdentifier: String
 
-    init(routine: Routine, cues: CueEmitter, now: Date = Date()) {
+    var isFinished: Bool { state == .finished }
+
+    init(routine: Routine,
+         cues: CueEmitter,
+         notifier: BackgroundCompletionNotifier = BackgroundCompletionNotifier(),
+         now: Date = Date()) {
         self.engine = IntervalEngine(routine: routine)
         self.startedAt = now
         self.cues = cues
+        self.notifier = notifier
+        self.notificationIdentifier = "walkcue.session.\(self.id.uuidString)"
     }
 
     func start() {
@@ -38,6 +47,7 @@ final class WalkSession: ObservableObject, Identifiable {
         refresh()
         cues.emitIntervalStart(engine.currentInterval(at: 0))
         startTimer()
+        scheduleBackgroundCompletion()
         PortfolioAnalytics.shared.track("routine.started", [
             "routine_id": engine.routine.id.uuidString,
         ])
@@ -51,6 +61,7 @@ final class WalkSession: ObservableObject, Identifiable {
         lastResumedAt = nil
         state = .paused
         stopTimer()
+        notifier.cancel(identifier: notificationIdentifier)
         refresh()
     }
 
@@ -59,6 +70,7 @@ final class WalkSession: ObservableObject, Identifiable {
         lastResumedAt = Date()
         state = .running
         startTimer()
+        scheduleBackgroundCompletion()
     }
 
     func end() -> WalkSummary {
@@ -68,8 +80,18 @@ final class WalkSession: ObservableObject, Identifiable {
         }
         state = .finished
         stopTimer()
+        notifier.cancel(identifier: notificationIdentifier)
         refresh()
         return summary()
+    }
+
+    /// Called from `WalkSessionView` when the scene returns to .active. If
+    /// the session already legitimately finished in the foreground (the
+    /// in-app cue handled it), make sure no stale local notification is
+    /// queued.
+    func cancelBackgroundCompletionIfFinished() {
+        guard isFinished else { return }
+        notifier.cancel(identifier: notificationIdentifier)
     }
 
     private func startTimer() {
@@ -105,11 +127,27 @@ final class WalkSession: ObservableObject, Identifiable {
                 cues.emitSessionComplete()
                 state = .finished
                 stopTimer()
+                // Foreground completion fired the in-app cue — kill the
+                // backup notification so the user doesn't get double-buzzed.
+                notifier.cancel(identifier: notificationIdentifier)
                 PortfolioAnalytics.shared.track("routine.completed", [
                     "routine_id": engine.routine.id.uuidString,
                     "duration_sec": Int(currentElapsed().rounded()),
                 ])
             }
+        }
+    }
+
+    private func scheduleBackgroundCompletion() {
+        // Predicted finish = now + remaining duration. We don't use
+        // (startedAt + total) because pauses shift the real finish out.
+        let remaining = engine.totalDuration - currentElapsed()
+        guard remaining > 0.5 else { return }
+        let fireDate = Date().addingTimeInterval(remaining)
+        let total = Int(engine.totalDuration.rounded())
+        let id = notificationIdentifier
+        Task { [notifier] in
+            await notifier.schedule(identifier: id, fireDate: fireDate, totalSeconds: total)
         }
     }
 

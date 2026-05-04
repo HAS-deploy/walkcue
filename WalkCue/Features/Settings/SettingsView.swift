@@ -98,8 +98,9 @@ struct SettingsView: View {
         Section {
             Toggle("Haptic cues", isOn: $settings.hapticsEnabled)
             Toggle("Audio cues", isOn: $settings.audioEnabled)
+            Toggle("Background completion alert", isOn: $settings.backgroundCompletionAlertEnabled)
         } header: { Text("Cues") } footer: {
-            Text("Cues play at each interval transition (e.g. warm up → brisk).")
+            Text("Cues play at each interval transition (e.g. warm up → brisk). The background completion alert sends a local notification when your walk finishes, so you don't miss it if your phone is in your pocket.")
         }
     }
 

@@ -5,6 +5,8 @@ struct WalkSessionView: View {
     @EnvironmentObject var history: HistoryStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.analytics) private var analytics
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var endSessionTrigger = 0
 
     var body: some View {
         VStack(spacing: 16) {
@@ -17,8 +19,15 @@ struct WalkSessionView: View {
         }
         .padding(24)
         .background(Theme.cardBackground.ignoresSafeArea())
+        .hapticSuccess(trigger: endSessionTrigger)
         .onAppear {
             if session.state == .idle { session.start() }
+        }
+        .onChange(of: scenePhase) { phase in
+            // User came back to the app after completion happened in
+            // foreground — drop any stale backup notification so they
+            // don't get double-buzzed.
+            if phase == .active { session.cancelBackgroundCompletionIfFinished() }
         }
         // Do NOT insert into history on state change — the End buttons are
         // the single source of truth for adding the summary.
@@ -30,6 +39,7 @@ struct WalkSessionView: View {
                 let summary = session.end()
                 history.add(summary)
                 analytics.track(.walkCompleted, properties: ["seconds": "\(summary.totalSeconds)"])
+                endSessionTrigger &+= 1
                 dismiss()
             } label: {
                 Label("End", systemImage: "xmark.circle.fill")
@@ -98,6 +108,7 @@ struct WalkSessionView: View {
                 let summary = session.end()
                 history.add(summary)
                 analytics.track(.walkCompleted, properties: ["seconds": "\(summary.totalSeconds)"])
+                endSessionTrigger &+= 1
                 dismiss()
             }
         }

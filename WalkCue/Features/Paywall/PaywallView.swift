@@ -78,8 +78,9 @@ struct PaywallView: View {
                 "product_id": PricingConfig.monthlyProductID,
             ])
             Task {
+                let before = purchases.isPremium
                 await purchases.purchaseMonthly()
-                if purchases.isPremium {
+                if purchases.isPremium && !before {
                     analytics.track(.purchaseCompleted, properties: ["product": "monthly"])
                     let product = purchases.monthlyProduct
                     let price = NSDecimalNumber(decimal: product?.price ?? 0).doubleValue
@@ -96,6 +97,8 @@ struct PaywallView: View {
                         UserDefaults.standard.set(true, forKey: "posthog.identified")
                     }
                 }
+                // paywall.purchase_failed is emitted from PurchaseManager with
+                // a typed PurchaseFailureReason. Don't double-emit here.
             }
         } label: {
             HStack {
@@ -125,8 +128,9 @@ struct PaywallView: View {
                 "product_id": PricingConfig.lifetimeProductID,
             ])
             Task {
+                let before = purchases.isPremium
                 await purchases.purchaseLifetime()
-                if purchases.isPremium {
+                if purchases.isPremium && !before {
                     analytics.track(.purchaseCompleted, properties: ["product": "lifetime"])
                     let product = purchases.lifetimeProduct
                     let price = NSDecimalNumber(decimal: product?.price ?? 0).doubleValue
@@ -143,6 +147,8 @@ struct PaywallView: View {
                         UserDefaults.standard.set(true, forKey: "posthog.identified")
                     }
                 }
+                // paywall.purchase_failed is emitted from PurchaseManager with
+                // a typed PurchaseFailureReason. Don't double-emit here.
             }
         } label: {
             HStack {
@@ -168,6 +174,7 @@ struct PaywallView: View {
 
     private var restoreButton: some View {
         Button {
+            PortfolioAnalytics.shared.track(PortfolioEvent.paywallRestoreClick)
             Task {
                 await purchases.restorePurchases()
                 if purchases.isPremium { analytics.track(.purchaseRestored) }
