@@ -11,7 +11,7 @@ struct RoutinesView: View {
     @State private var activeSession: WalkSession?
     @State private var showingEditor: Bool = false
 
-    private var gate: PremiumGate { PremiumGate(isPremium: purchases.isPremium) }
+    private var gate: PremiumGate { PremiumGate(isEntitled: purchases.isEntitled) }
 
     var body: some View {
         List {

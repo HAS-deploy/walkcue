@@ -12,7 +12,7 @@ struct StartView: View {
 
     @State private var activeSession: WalkSession?
 
-    private var gate: PremiumGate { PremiumGate(isPremium: purchases.isPremium) }
+    private var gate: PremiumGate { PremiumGate(isEntitled: purchases.isEntitled) }
 
     private var defaultRoutine: Routine {
         routines.customRoutines.first ?? BuiltInRoutines.quickStart

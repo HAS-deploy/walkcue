@@ -20,11 +20,27 @@ enum PremiumFeature: String, Identifiable, Hashable {
     }
 }
 
+/// Gate decisions for Pro features. `isEntitled` is the canonical input:
+/// it collapses (Premium OR inside install-trial) into a single boolean,
+/// matching the RoadBinder `EntitlementGate` model. The legacy
+/// `isPremium:` initializer is preserved for source-compat with call
+/// sites that haven't yet been migrated.
 struct PremiumGate {
-    let isPremium: Bool
+    let isEntitled: Bool
+
+    init(isEntitled: Bool) {
+        self.isEntitled = isEntitled
+    }
+
+    /// Legacy initializer — treats `isPremium` as the full entitlement
+    /// signal. New call sites should pass `isEntitled:` so the install
+    /// trial is honored.
+    init(isPremium: Bool) {
+        self.isEntitled = isPremium
+    }
 
     func isAllowed(_ feature: PremiumFeature) -> Bool {
-        if isPremium { return true }
+        if isEntitled { return true }
         switch feature {
         case .quickStart, .builtInRoutines:
             return true
@@ -34,12 +50,12 @@ struct PremiumGate {
     }
 
     func canSaveAnotherCustomRoutine(currentCount: Int) -> Bool {
-        if isPremium { return true }
+        if isEntitled { return true }
         return currentCount < PricingConfig.freeCustomRoutineSlots
     }
 
     func canEnableAnotherReminder(currentCount: Int) -> Bool {
-        if isPremium { return true }
+        if isEntitled { return true }
         return currentCount < PricingConfig.freeReminderSlots
     }
 }

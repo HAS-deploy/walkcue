@@ -310,9 +310,16 @@ def cmd_metadata():
             "• No account, no sign-in\n"
             "• No cloud sync, no analytics SDKs\n"
             "• Health integration is fully optional\n\n"
-            "One-time purchase\n"
+            "Plans\n"
             "• Free: quick start, built-in routines, one custom routine, 7-day history\n"
-            "• Lifetime unlock: unlimited custom routines, full history, advanced cues — forever, no subscription\n\n"
+            "• Premium Monthly: $1.99/month, auto-renewing\n"
+            "• Premium Yearly: $14.99/year, auto-renewing, includes 7-day free trial\n"
+            "• Lifetime: $8.99 one-time, no subscription\n\n"
+            "Premium and Lifetime unlock unlimited custom routines, full history, and advanced cues.\n\n"
+            "Subscription details\n"
+            "Payment will be charged to your Apple ID at confirmation of purchase. Subscriptions auto-renew unless canceled at least 24 hours before the end of the current period; renewal is charged within 24 hours of the period end. Manage subscriptions in your Apple ID Account Settings. Any unused portion of a free trial is forfeited when you purchase a subscription before the trial ends.\n\n"
+            "Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n"
+            "Privacy Policy: https://has-deploy.github.io/walkcue/privacy-policy.html\n\n"
             "WalkCue supports daily walking routines. It is not a medical device and does not diagnose, treat, or monitor any condition."
         ),
         "keywords": "walk,walking,treadmill,interval,timer,pedometer,steps,cardio,reminder,walking coach",

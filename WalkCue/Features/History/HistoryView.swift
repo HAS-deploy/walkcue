@@ -6,10 +6,14 @@ struct HistoryView: View {
 
     let onGatedTap: (PremiumFeature) -> Void
 
-    private var gate: PremiumGate { PremiumGate(isPremium: purchases.isPremium) }
+    private var gate: PremiumGate { PremiumGate(isEntitled: purchases.isEntitled) }
 
+    /// Honor the install trial: during the 7-day window users see their
+    /// full history, after the trial they drop back to the
+    /// `freeHistoryWindow` cap. The underlying `history.walks` collection
+    /// is never mutated, so data is preserved.
     private var visibleWalks: [WalkSummary] {
-        if purchases.isPremium { return history.walks }
+        if purchases.isEntitled { return history.walks }
         let cutoff = Calendar.current.date(byAdding: .day, value: -PricingConfig.freeHistoryWindow, to: Date()) ?? Date.distantPast
         return history.walks.filter { $0.date >= cutoff }
     }
@@ -27,7 +31,7 @@ struct HistoryView: View {
                     ForEach(visibleWalks) { walk in
                         walkRow(walk)
                     }
-                    if !purchases.isPremium && history.walks.count > visibleWalks.count {
+                    if !purchases.isEntitled && history.walks.count > visibleWalks.count {
                         Section {
                             UpsellCard(
                                 title: "See your full history",

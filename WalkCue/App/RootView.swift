@@ -58,12 +58,18 @@ struct RootView: View {
         }
         .onAppear {
             #if DEBUG
-            if UserDefaults.standard.bool(forKey: "WALKCUE_SHOW_PAYWALL") {
+            // Don't auto-pop the paywall during the install trial — the
+            // user is already fully entitled, so showing the paywall
+            // would be misleading. The DEBUG flag is for testing the
+            // post-trial free-tier flow.
+            if UserDefaults.standard.bool(forKey: "WALKCUE_SHOW_PAYWALL"),
+               !purchases.installTrialActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                     paywallTrigger = .customRoutines
                 }
             }
             #endif
+            purchases.refreshInstallTrial()
         }
     }
 }

@@ -172,7 +172,7 @@ struct SettingsView: View {
             reminders.cancel(identifier: "walk_reminder")
             return
         }
-        let gate = PremiumGate(isPremium: purchases.isPremium)
+        let gate = PremiumGate(isEntitled: purchases.isEntitled)
         let pending = await reminders.pendingIdentifiers()
         let others = pending.filter { $0 != "walk_reminder" }.count
         if !gate.canEnableAnotherReminder(currentCount: others) {
