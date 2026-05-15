@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @EnvironmentObject var settings: SettingsStore
@@ -6,11 +7,27 @@ struct SettingsView: View {
     @EnvironmentObject var history: HistoryStore
     @Environment(\.analytics) private var analytics
     @Environment(\.reminders) private var reminders
+    @Environment(\.openURL) private var openURL
 
     @State private var showPaywall = false
     @State private var walkReminderEnabled = false
     @State private var walkReminderTime: Date = TimeFormat.combine(hour: 8, minute: 0)
     @State private var reminderAuthStatus: ReminderManager.AuthStatus = .notDetermined
+
+    @AppStorage("portfolio.analytics.opted_out") private var analyticsOptedOut: Bool = false
+    private var analyticsEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { !analyticsOptedOut },
+            set: { newValue in
+                analyticsOptedOut = !newValue
+                if newValue {
+                    PortfolioAnalytics.shared.optIn()
+                } else {
+                    PortfolioAnalytics.shared.optOut()
+                }
+            }
+        )
+    }
 
     var body: some View {
         Form {
@@ -20,6 +37,7 @@ struct SettingsView: View {
             cuesSection
             healthSection
             displaySection
+            privacySection
             aboutSection
             moreFromUsSection
             #if DEBUG
@@ -44,12 +62,24 @@ struct SettingsView: View {
             if purchases.isPremium {
                 Label("Premium unlocked", systemImage: "checkmark.seal.fill")
                     .foregroundStyle(Theme.accent)
+                Button("Manage subscription") {
+                    Task {
+                        if let scene = UIApplication.shared.connectedScenes
+                            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+                            ?? UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                            try? await AppStore.showManageSubscriptions(in: scene)
+                        } else {
+                            openURL(URL(string: "https://apps.apple.com/account/subscriptions")!)
+                        }
+                    }
+                }
+                Button("Restore purchases") { Task { await purchases.restorePurchases() } }
             } else {
                 Button { showPaywall = true } label: {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Unlock everything").font(.headline)
-                            Text("One-time \(purchases.lifetimeDisplayPrice). No subscription.")
+                            Text("Pick monthly, yearly, or lifetime.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -100,7 +130,7 @@ struct SettingsView: View {
             Toggle("Audio cues", isOn: $settings.audioEnabled)
             Toggle("Background completion alert", isOn: $settings.backgroundCompletionAlertEnabled)
         } header: { Text("Cues") } footer: {
-            Text("Cues play at each interval transition (e.g. warm up → brisk). The background completion alert sends a local notification when your walk finishes, so you don't miss it if your phone is in your pocket.")
+            Text("Interval cues (warm up → brisk → cool down) play while the app is open. The background completion alert sends a local notification when your walk finishes, so you don't miss it if your phone is in your pocket.")
         }
     }
 
@@ -119,6 +149,14 @@ struct SettingsView: View {
                 ForEach(SettingsStore.Appearance.allCases) { a in Text(a.label).tag(a) }
             }
         } header: { Text("Display") }
+    }
+
+    private var privacySection: some View {
+        Section {
+            Toggle("Share anonymous analytics", isOn: analyticsEnabledBinding)
+        } header: { Text("Privacy") } footer: {
+            Text("WalkCue uses anonymous, opt-out product analytics to help improve the app. Turn this off to stop sending events.")
+        }
     }
 
     private var aboutSection: some View {

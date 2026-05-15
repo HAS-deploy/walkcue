@@ -90,10 +90,10 @@ final class BackgroundCompletionNotifier: @unchecked Sendable {
         guard fireDate.timeIntervalSinceNow > 0.5 else { return }
         guard await scheduler.ensureAuthorization() else { return }
         let minutes = max(1, Int((Double(totalSeconds) / 60.0).rounded()))
-        let body = "Walk complete — \(minutes) minute\(minutes == 1 ? "" : "s") done"
+        let body = "\(minutes) minute\(minutes == 1 ? "" : "s") done. Nice work."
         await scheduler.scheduleOneShot(
             identifier: identifier,
-            title: "WalkCue",
+            title: "Walk complete",
             body: body,
             fireDate: fireDate
         )

@@ -169,7 +169,7 @@ struct UpsellCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label(title, systemImage: "lock.fill").font(.headline)
                 Text(message).font(.subheadline).foregroundStyle(.secondary)
-                Text("Unlock for a one-time purchase")
+                Text("Unlock Premium")
                     .font(.caption)
                     .foregroundStyle(Theme.accent)
             }
