@@ -8,7 +8,7 @@ struct HistoryView: View {
 
     private var gate: PremiumGate { PremiumGate(isEntitled: purchases.isEntitled) }
 
-    /// Honor the install trial: during the 7-day window users see their
+    /// Honor the install trial: during the 14-day window users see their
     /// full history, after the trial they drop back to the
     /// `freeHistoryWindow` cap. The underlying `history.walks` collection
     /// is never mutated, so data is preserved.
