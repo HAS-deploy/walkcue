@@ -17,14 +17,15 @@ final class PurchaseManager: ObservableObject {
     private let premiumKey = "walkcue.isPremium"
     /// Install-trial bookkeeping key. Set on first launch, then never
     /// rewritten — so reinstalling the app (which clears UserDefaults)
-    /// starts a new 7-day window, but app updates do not.
+    /// starts a new 14-day window, but app updates do not.
     static let firstLaunchKey = "walkcue.firstLaunchAt"
 
-    /// Days of full-Premium entitlement granted at install time, matching
-    /// the StoreKit annual `introductoryOffer` (P1W) on `PricingConfig`.
+    /// Days of full-Premium entitlement granted at install time.
+    /// SoT is 14 days (independent of the StoreKit annual intro, which
+    /// stays P1W / `PricingConfig.annualTrialDays` — no ASC change).
     /// After this window, the user drops to the free tier with all data
     /// preserved.
-    static let installTrialDays: Int = 7
+    static let installTrialDays: Int = 14
 
     /// UserDefaults reader for tests + previews; defaults provided so it
     /// can be substituted with an isolated suite.
@@ -65,7 +66,7 @@ final class PurchaseManager: ObservableObject {
 
     /// Recompute `installTrialActive` against the current clock. Call on
     /// app-foreground / scene activation so the flag flips off mid-session
-    /// when day 7 elapses.
+    /// when the 14-day window elapses.
     func refreshInstallTrial(now: Date = Date()) {
         let start = defaults.object(forKey: Self.firstLaunchKey) as? Date
         self.installTrialActive = Self.computeTrialActive(

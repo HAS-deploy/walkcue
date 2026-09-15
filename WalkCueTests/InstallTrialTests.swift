@@ -1,15 +1,23 @@
 import XCTest
 @testable import WalkCue
 
-/// Install-time 7-day Premium trial. Mirrors RoadBinder's
+/// Install-time 14-day Premium trial. Mirrors RoadBinder's
 /// `UserEntitlement.isInTrial` semantics, but keyed on a UserDefaults
 /// timestamp so reinstall starts a fresh window while in-place app
 /// updates do not.
+///
+/// Duration SoT: `PurchaseManager.installTrialDays` (14). Tests read that
+/// constant so they stay aligned if the window changes.
 @MainActor
 final class InstallTrialTests: XCTestCase {
 
     private var suiteName: String!
     private var defaults: UserDefaults!
+
+    /// Install-trial SoT (14). Prefer this over `PricingConfig.annualTrialDays`,
+    /// which remains the StoreKit/ASC intro length and is intentionally
+    /// unchanged here.
+    private var trialDays: Int { PurchaseManager.installTrialDays }
 
     override func setUp() {
         super.setUp()
@@ -25,33 +33,41 @@ final class InstallTrialTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - 1. Active during the 7-day window
+    private func dateByAddingDays(_ days: Int, to start: Date) -> Date {
+        Calendar.current.date(byAdding: .day, value: days, to: start)!
+    }
 
-    func testInstallTrialActiveDuringFirstSevenDays() {
+    // MARK: - 1. Active during the 14-day window
+
+    func testInstallTrialActiveDuringFirstFourteenDays() {
         let start = Date()
         let pm = PurchaseManager(defaults: defaults, now: start)
         XCTAssertTrue(pm.installTrialActive, "Trial should be active on day 0")
         XCTAssertTrue(pm.isEntitled)
+        XCTAssertEqual(trialDays, 14, "Install-trial SoT is 14 days")
 
-        // Day 6: still active (we drop at day 7).
-        let day6 = Calendar.current.date(byAdding: .day, value: 6, to: start)!
-        pm.refreshInstallTrial(now: day6)
-        XCTAssertTrue(pm.installTrialActive, "Trial should still be active on day 6")
+        // Last day of the window: still active (we drop after day 14).
+        let lastActiveDay = dateByAddingDays(trialDays - 1, to: start)
+        pm.refreshInstallTrial(now: lastActiveDay)
+        XCTAssertTrue(pm.installTrialActive, "Trial should still be active on day \(trialDays - 1)")
         XCTAssertTrue(pm.isEntitled)
     }
 
-    // MARK: - 2. Inactive after day 7
+    // MARK: - 2. Inactive after the full window + 1
 
-    func testInstallTrialInactiveAfterSevenDays() {
+    func testInstallTrialInactiveAfterFourteenDays() {
         let start = Date()
         let pm = PurchaseManager(defaults: defaults, now: start)
-        let day7 = Calendar.current.date(byAdding: .day, value: 7, to: start)!
-        pm.refreshInstallTrial(now: day7)
-        XCTAssertFalse(pm.installTrialActive, "Trial should expire on day 7")
+        // Clock past the full window + 1 so expiry is unambiguous
+        // (`elapsed < installTrialDays`; day 14 is the first inactive day,
+        // day 15 is safely past the boundary).
+        let afterWindow = dateByAddingDays(trialDays + 1, to: start)
+        pm.refreshInstallTrial(now: afterWindow)
+        XCTAssertFalse(pm.installTrialActive, "Trial should expire after day \(trialDays)")
         XCTAssertFalse(pm.isEntitled, "Without Premium, user should fall back to free tier")
 
         // Day 30: still inactive.
-        let day30 = Calendar.current.date(byAdding: .day, value: 30, to: start)!
+        let day30 = dateByAddingDays(30, to: start)
         pm.refreshInstallTrial(now: day30)
         XCTAssertFalse(pm.installTrialActive)
         XCTAssertFalse(pm.isEntitled)
@@ -109,8 +125,9 @@ final class InstallTrialTests: XCTestCase {
         let preCount = historyStore.walks.count
         XCTAssertGreaterThanOrEqual(preCount, 2)
 
-        // Trial expires — backdate first-launch to 10 days ago and recompute.
-        let start = Date().addingTimeInterval(-60 * 60 * 24 * 10)
+        // Trial expires — backdate first-launch past the full window + 1
+        // (10 days was still inside a 14-day trial).
+        let start = dateByAddingDays(-(trialDays + 1), to: Date())
         defaults.set(start, forKey: PurchaseManager.firstLaunchKey)
         let pm = PurchaseManager(defaults: defaults, now: Date())
         XCTAssertFalse(pm.installTrialActive, "Trial should be expired")
