@@ -40,10 +40,11 @@
 <p>Your settings, saved routines, and walk history are stored locally using standard iOS preferences and local storage. Uninstalling the app deletes this data.</p>
 
 <h2>Network activity</h2>
-<p>WalkCue talks to two destinations over HTTPS:</p>
+<p>WalkCue talks to three destinations over HTTPS:</p>
 <ul>
   <li>Apple's App Store, for the optional in-app purchases (monthly and yearly subscriptions and a one-time Lifetime unlock) and to verify your entitlement. Apple processes the transaction; we do not see your payment details.</li>
   <li>PostHog (<code>us.i.posthog.com</code>), for the anonymous analytics described above.</li>
+  <li>Apple AdServices (<code>api-adservices.apple.com</code>), once on first launch, for the install attribution described above.</li>
 </ul>
 
 <h2>Notifications</h2>
